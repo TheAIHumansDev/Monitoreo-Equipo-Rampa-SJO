@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Equipo 360° | Evidencia Fotográfica</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{overflow-x:hidden}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#060b1e;color:#e2e8f0;overflow-x:hidden;min-height:100vh}
+.app-shell{position:relative;z-index:2;display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+
+/* HEADER */
+.app-header{background:rgba(4,7,18,0.96);backdrop-filter:blur(24px);border-bottom:1px solid rgba(59,130,246,0.16);padding:12px 16px 0;flex-shrink:0}
+.header-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+.header-title{font-size:17px;font-weight:700;background:linear-gradient(135deg,#3b82f6,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
+.header-sub{color:#475569;font-size:11px}
+.progress-bar{width:100%;height:3px;background:rgba(59,130,246,0.08);overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#3b82f6,#8b5cf6);transition:width .4s ease;width:0%}
+.step-label{text-align:center;color:#475569;font-size:11px;padding:5px 0 8px;letter-spacing:.3px}
+
+/* CONTENT */
+.app-content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:14px 13px 20px;max-width:680px;margin:0 auto;width:100%}
+.sc{display:none;animation:fadeUp .3s ease}
+.sc.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.card-glass{background:rgba(10,17,35,0.88);backdrop-filter:blur(20px);border:1px solid rgba(59,130,246,0.2);border-radius:18px;padding:22px;margin-bottom:12px}
+.card-title{color:#fff;font-size:19px;font-weight:700;text-align:center;margin-bottom:5px}
+.card-sub{color:#475569;font-size:13px;text-align:center;margin-bottom:16px}
+input[type="text"]{width:100%;padding:13px 15px;background:rgba(18,28,52,0.8);border:1px solid rgba(59,130,246,0.18);border-radius:11px;color:#fff;font-size:15px;outline:none;transition:border-color .2s;font-family:inherit}
+input[type="text"]:focus{border-color:#3b82f6}
+.form-lbl{color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block}
+.form-g{margin-bottom:14px}
+.nav-btns{display:flex;gap:9px;margin-top:15px}
+.btn-prev{flex:1;padding:12px;background:rgba(51,65,85,0.28);border:1px solid rgba(51,65,85,0.45);border-radius:10px;color:#94a3b8;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-next{flex:2;padding:12px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:transform .2s}
+.btn-next:hover{transform:translateY(-1px)}
+.btn-next:disabled{opacity:.4;pointer-events:none}
+
+/* GRID SELECTORS */
+.opt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:8px}
+.opt-item{padding:14px 6px;background:rgba(18,28,52,.55);border:2px solid rgba(59,130,246,.14);border-radius:12px;cursor:pointer;text-align:center;transition:all .2s}
+.opt-item:hover{border-color:rgba(59,130,246,.4);background:rgba(59,130,246,.08)}
+.opt-item.sel{border-color:#3b82f6;background:rgba(59,130,246,.18)}
+.opt-icon{font-size:26px;margin-bottom:5px}
+.opt-label{color:#cbd5e1;font-size:11px;font-weight:600;line-height:1.3}
+
+.pos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.pos-item{padding:18px 8px;background:rgba(18,28,52,.55);border:2px solid rgba(139,92,246,.14);border-radius:12px;cursor:pointer;text-align:center;transition:all .2s}
+.pos-item:hover{border-color:rgba(139,92,246,.4);background:rgba(139,92,246,.08)}
+.pos-item.sel{border-color:#8b5cf6;background:rgba(139,92,246,.18)}
+.pos-icon{font-size:28px;margin-bottom:6px}
+.pos-label{color:#cbd5e1;font-size:12px;font-weight:600}
+
+/* SUMMARY BAR */
+.summary-bar{background:rgba(10,17,35,0.9);border:1px solid rgba(59,130,246,0.18);border-radius:11px;padding:10px 13px;margin-bottom:12px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.summary-badge{background:linear-gradient(135deg,#1d4ed8,#7c3aed);padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.summary-t{color:#64748b;font-size:12px}
+
+/* 360 CAPTURE (card, non-camera state) */
+.shot-progress{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.shot-dot{flex:1;min-width:14px;height:5px;border-radius:3px;background:rgba(59,130,246,.14)}
+.shot-dot.done{background:#10b981}
+.shot-dot.active{background:#3b82f6}
+.shot-label-big{text-align:center;color:#fff;font-size:20px;font-weight:700;margin-bottom:3px}
+.shot-label-sub{text-align:center;color:#475569;font-size:12px;margin-bottom:16px}
+
+.rotate-overlay{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(10,17,35,0.92);border:1px solid rgba(245,158,11,.3);border-radius:16px;padding:40px 20px;margin-bottom:14px}
+.rotate-icon{font-size:52px;animation:rot 1.6s ease-in-out infinite}
+@keyframes rot{0%,100%{transform:rotate(0deg)}50%{transform:rotate(90deg)}}
+.rotate-txt{color:#fbbf24;font-size:14px;font-weight:700;text-align:center}
+.rotate-sub{color:#64748b;font-size:12px;text-align:center;max-width:280px}
+
+.btn-start-cam{width:100%;padding:14px;background:rgba(59,130,246,.1);border:2px dashed rgba(59,130,246,.38);border-radius:11px;color:#60a5fa;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:9px;transition:all .2s;font-family:inherit}
+.btn-start-cam:hover{background:rgba(59,130,246,.2);border-color:rgba(59,130,246,.65)}
+
+/* FULLSCREEN CAMERA / PREVIEW — rendered above the entire app-shell so
+   rotating the phone never squishes the normal page layout */
+.cam-fullscreen{position:fixed;inset:0;width:100vw;height:100dvh;background:#000;z-index:5000;display:none;flex-direction:column;overflow:hidden}
+.cam-fullscreen video{flex:1;width:100%;height:100%;object-fit:cover;background:#000;display:block}
+.camfs-header{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:14px 16px;z-index:2;background:linear-gradient(to bottom, rgba(0,0,0,.65), transparent);padding-top:calc(14px + env(safe-area-inset-top))}
+.camfs-lbl{background:rgba(59,130,246,.92);color:#fff;padding:5px 16px;border-radius:16px;font-size:12px;font-weight:700;white-space:nowrap}
+.camfs-ts{background:rgba(0,0,0,.78);color:#fff;padding:4px 10px;border-radius:6px;font-size:11px;font-family:'Courier New',monospace;font-weight:600}
+.camfs-corners span{position:absolute;width:26px;height:26px;border:2.5px solid #3b82f6;z-index:2}
+.camfs-corners .c-tl{top:9%;left:4%;border-right:none;border-bottom:none}
+.camfs-corners .c-tr{top:9%;right:4%;border-left:none;border-bottom:none}
+.camfs-corners .c-bl{bottom:16%;left:4%;border-right:none;border-top:none}
+.camfs-corners .c-br{bottom:16%;right:4%;border-left:none;border-top:none}
+.camfs-controls{position:absolute;bottom:0;left:0;right:0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));display:flex;gap:10px;background:linear-gradient(to top, rgba(0,0,0,.75), transparent);z-index:2}
+.btn-capture-fs{flex:1;padding:16px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border:none;border-radius:14px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+.camfs-preview{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+.btn-retake-fs{flex:1;padding:16px;background:rgba(239,68,68,.88);border:none;border-radius:14px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn-confirm-fs{flex:2;padding:16px;background:linear-gradient(135deg,#10b981,#059669);border:none;border-radius:14px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+
+/* REVIEW GRID */
+.review-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.review-item{position:relative;border-radius:11px;overflow:hidden;border:2px solid rgba(16,185,129,.3);aspect-ratio:16/9}
+.review-item img{width:100%;height:100%;object-fit:cover}
+.review-lbl{position:absolute;top:0;left:0;right:0;background:rgba(0,0,0,.75);color:#fff;padding:4px 8px;font-size:10px;font-weight:700}
+.review-retake{position:absolute;bottom:0;right:0;background:rgba(59,130,246,.9);color:#fff;border:none;padding:5px 9px;font-size:10px;font-weight:700;cursor:pointer;border-radius:8px 0 0 0;font-family:inherit}
+
+/* AI ANALYSIS */
+.ai-box{background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.22);border-radius:12px;padding:14px;margin-bottom:12px}
+.ai-loading{text-align:center;color:#c4b5fd;font-size:13px;padding:20px 0}
+.ai-spin{width:26px;height:26px;border:3px solid rgba(139,92,246,.2);border-top-color:#8b5cf6;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ai-result{border-radius:10px;padding:11px 13px;margin-bottom:8px;border:1px solid}
+.ai-result.ok{background:rgba(16,185,129,.07);border-color:rgba(16,185,129,.25)}
+.ai-result.warn{background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.28)}
+.ai-result-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.ai-result-lbl{font-size:12px;font-weight:700;color:#e2e8f0}
+.ai-result-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:5px}
+.ai-result-tag.ok{background:rgba(16,185,129,.18);color:#34d399}
+.ai-result-tag.warn{background:rgba(245,158,11,.2);color:#fbbf24}
+.ai-result-desc{color:#94a3b8;font-size:12px;line-height:1.5}
+
+/* COMPLETION */
+.comp-icon{font-size:60px;text-align:center;margin-bottom:10px}
+.comp-title{color:#fff;font-size:22px;font-weight:700;text-align:center;margin-bottom:16px}
+.sum-card{background:rgba(10,17,35,.88);border:1px solid rgba(59,130,246,.18);border-radius:14px;padding:16px;margin-bottom:11px}
+.sum-card-t{color:#fff;font-size:13px;font-weight:600;margin-bottom:11px}
+.sum-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid rgba(59,130,246,.07)}
+.sum-row:last-child{border-bottom:none}
+.sum-lab{color:#475569;font-size:12px}
+.sum-val{color:#fff;font-weight:600;font-size:12px;text-align:right}
+.btn-prim{padding:14px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border:none;border-radius:11px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:transform .2s;font-family:inherit;width:100%;margin-top:8px}
+.btn-prim:hover{transform:translateY(-1px)}
+.btn-link{display:block;text-align:center;padding:13px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.35);border-radius:11px;color:#34d399;font-size:13px;font-weight:700;text-decoration:none;margin-top:8px}
+
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(12,20,38,.97);border:1px solid rgba(59,130,246,.38);color:#e2e8f0;padding:9px 18px;border-radius:14px;font-size:12px;font-weight:600;z-index:400;white-space:nowrap;backdrop-filter:blur(12px);pointer-events:none;animation:fadeUp .25s ease}
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+<header class="app-header">
+  <div class="header-row">
+    <span class="header-title">📸 Equipo 360°</span>
+    <span class="header-sub">Evidencia de Salida</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressBar"></div></div>
+  <div class="step-label" id="stepLabel">Seleccione el equipo</div>
+</header>
+
+<div class="app-content" id="appContent">
+
+  <!-- s0: inspector + equipo -->
+  <div id="s0" class="sc active">
+    <div class="card-glass">
+      <h2 class="card-title">Inspector</h2>
+      <p class="card-sub">Nombre de quien registra la evidencia</p>
+      <input type="text" id="inspectorName" placeholder="Nombre completo">
+    </div>
+    <div class="card-glass">
+      <h2 class="card-title">Tipo de Equipo</h2>
+      <p class="card-sub">Seleccione el equipo GSE a inspeccionar</p>
+      <div class="opt-grid" id="equipoGrid"></div>
+      <div class="nav-btns">
+        <button class="btn-next" id="s0Next" onclick="goStep1()" disabled>Continuar →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- s1: numero de unidad -->
+  <div id="s1" class="sc">
+    <div class="card-glass">
+      <h2 class="card-title">Número de Unidad</h2>
+      <p class="card-sub" id="s1Sub">Identifique la unidad específica</p>
+      <div class="form-g">
+        <label class="form-lbl">Número / ID del Equipo</label>
+        <input type="text" id="unidadNum" placeholder="Ej: MULA-04, TW-02, ESC-01">
+      </div>
+      <div class="nav-btns">
+        <button class="btn-prev" onclick="showSC('s0');updStep('Seleccione el equipo',10)">← Anterior</button>
+        <button class="btn-next" onclick="goStep2()">Continuar →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- s2: posicion de salida -->
+  <div id="s2" class="sc">
+    <div class="card-glass">
+      <h2 class="card-title">Posición de Salida</h2>
+      <p class="card-sub">¿De dónde sale el equipo?</p>
+      <div class="pos-grid" id="posGrid"></div>
+      <div class="nav-btns">
+        <button class="btn-prev" onclick="showSC('s1');updStep('Número de Unidad',30)">← Anterior</button>
+        <button class="btn-next" id="s2Next" onclick="goStep3()" disabled>Iniciar Captura 360° →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- sI: captura 360 (estado sin cámara activa) -->
+  <div id="sI" class="sc">
+    <div class="summary-bar" id="capSummaryBar"></div>
+    <div class="card-glass">
+      <div class="shot-progress" id="shotProgress"></div>
+      <div class="shot-label-big" id="shotLabelBig"></div>
+      <div class="shot-label-sub" id="shotLabelSub"></div>
+
+      <div id="rotatePrompt" class="rotate-overlay" style="display:none">
+        <div class="rotate-icon">📱</div>
+        <div class="rotate-txt">Gire su teléfono en horizontal</div>
+        <div class="rotate-sub">Las fotos 360° deben capturarse en modo horizontal (landscape) para cubrir correctamente el equipo.</div>
+      </div>
+
+      <div id="startArea" style="display:none">
+        <button class="btn-start-cam" onclick="startCam()">📷 Iniciar Cámara</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- sR: revision -->
+  <div id="sR" class="sc">
+    <div class="card-glass">
+      <h2 class="card-title">Revisión Final</h2>
+      <p class="card-sub">Confirme las fotos antes de enviar</p>
+      <div class="review-grid" id="reviewGrid"></div>
+      <button class="btn-prim" onclick="submitEvidence()" id="submitBtn">☁️ Enviar y Analizar con IA</button>
+      <button class="btn-prev" style="width:100%;margin-top:8px" onclick="showSC('sI');rebuildCaptureUI()">← Volver a Captura</button>
+    </div>
+  </div>
+
+  <!-- sC: completado -->
+  <div id="sC" class="sc">
+    <div class="comp-icon">✅</div>
+    <h2 class="comp-title">Evidencia Registrada</h2>
+    <div class="sum-card">
+      <div class="sum-card-t">📋 Detalle del Registro</div>
+      <div class="sum-row"><span class="sum-lab">Inspector:</span><span class="sum-val" id="cInspector"></span></div>
+      <div class="sum-row"><span class="sum-lab">Equipo:</span><span class="sum-val" id="cEquipo"></span></div>
+      <div class="sum-row"><span class="sum-lab">Unidad:</span><span class="sum-val" id="cUnidad"></span></div>
+      <div class="sum-row"><span class="sum-lab">Sale de:</span><span class="sum-val" id="cPosicion"></span></div>
+      <div class="sum-row"><span class="sum-lab">Fecha / Hora:</span><span class="sum-val" id="cFecha"></span></div>
+    </div>
+    <div class="ai-box" id="aiBox">
+      <div class="ai-loading" id="aiLoading"><div class="ai-spin"></div>Analizando fotografías con IA…</div>
+      <div id="aiResults" style="display:none"></div>
+    </div>
+    <a href="#" id="driveLink" class="btn-link" style="display:none" target="_blank">📁 Ver carpeta en Google Drive</a>
+    <button class="btn-prim" onclick="newRegistro()">🔄 Nuevo Registro</button>
+  </div>
+
+</div>
+</div>
+
+<!-- ═══ CÁMARA A PANTALLA COMPLETA (fuera del flujo del app-shell) ═══ -->
+<div id="camFullscreen" class="cam-fullscreen">
+  <div class="camfs-header">
+    <span class="camfs-lbl" id="camLbl"></span>
+    <span class="camfs-ts" id="camTs">--:--:--</span>
+  </div>
+  <video id="shotVid" autoplay playsinline muted></video>
+  <div class="camfs-corners"><span class="c-tl"></span><span class="c-tr"></span><span class="c-bl"></span><span class="c-br"></span></div>
+  <div class="camfs-controls">
+    <button class="btn-capture-fs" onclick="doCapture()">📸 Capturar</button>
+  </div>
+</div>
+
+<div id="prevFullscreen" class="cam-fullscreen">
+  <img class="camfs-preview" id="prevImg">
+  <div class="camfs-controls">
+    <button class="btn-retake-fs" onclick="retakeShot()">🔄 Retomar</button>
+    <button class="btn-confirm-fs" onclick="confirmShot()">✓ Usar esta foto</button>
+  </div>
+</div>
+
+<script>
+// ═══════ CONFIG ═══════
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyfeLOpPNmV53wqF4cnk9Ff7T0deCl22FLoSV71d7pJjOkSG_5Q39sWBIzPLjXoa65r3A/exec';
+
+const EQUIPOS=[
+  {key:'mulas',label:'Mulas',emoji:'🚜'},
+  {key:'fajas',label:'Fajas',emoji:'📦'},
+  {key:'towbarless',label:'Towbarless',emoji:'🔧'},
+  {key:'remolques',label:'Remolques',emoji:'🚛'},
+  {key:'escaleras',label:'Escaleras',emoji:'🪜'},
+  {key:'aires',label:'Aires',emoji:'❄️'},
+  {key:'planta_electrica',label:'Planta Eléctrica',emoji:'⚡'},
+  {key:'dolly',label:'Dolly',emoji:'🛞'},
+  {key:'carretas',label:'Carretas',emoji:'🛒'},
+  {key:'pallets',label:'Pallets',emoji:'📦'},
+  {key:'mesas',label:'Mesas',emoji:'🗄️'},
+  {key:'toilet',label:'Toilet',emoji:'🚽'},
+  {key:'agua',label:'Agua',emoji:'💧'},
+  {key:'otro',label:'Otro',emoji:'📋'},
+];
+
+const POSICIONES=[
+  {key:'base1',label:'Base 1',emoji:''},
+  {key:'base2',label:'Base 2',emoji:''},
+  {key:'base3',label:'Base 3',emoji:''},
+  {key:'base4',label:'Base 4',emoji:''},
+];
+
+// Fotos base de todo equipo (vueltas 360°)
+const SHOTS_BASE=[
+  {key:'frontal',label:'Frontal',sub:'Vista frontal del equipo'},
+  {key:'lateral_izq',label:'Lateral Izquierdo',sub:'Vista lateral — lado izquierdo'},
+  {key:'lateral_der',label:'Lateral Derecho',sub:'Vista lateral — lado derecho'},
+  {key:'trasero',label:'Trasero',sub:'Vista trasera del equipo'},
+];
+// Checkpoints obligatorios para TODOS los tipos de equipo
+const SHOTS_UNIVERSAL=[
+  {key:'calzas',label:'Calzas',sub:'Fotografía de las calzas del equipo'},
+  {key:'extintor',label:'Extintor',sub:'Fotografía del extintor'},
+  {key:'fod',label:'FOD del Equipo',sub:'Verificación de objetos extraños (FOD) alrededor del equipo'},
+];
+// Checkpoints adicionales según el tipo de equipo seleccionado
+const EXTRA_SHOTS_BY_EQUIPO={
+  planta_electrica:[{key:'cobertor',label:'Cobertor',sub:'Fotografía del cobertor del equipo'}],
+  aires:[{key:'cobertor',label:'Cobertor',sub:'Fotografía del cobertor del equipo'}],
+  toilet:[
+    {key:'guantes',label:'Guantes',sub:'EPP — evidencia de uso de guantes'},
+    {key:'careta',label:'Careta',sub:'EPP — evidencia de uso de careta'},
+    {key:'delantal',label:'Delantal',sub:'EPP — evidencia de uso de delantal'},
+  ],
+  agua:[{key:'guantes',label:'Guantes',sub:'EPP — evidencia de uso de guantes'}],
+};
+function getShotsForEquipo(key){
+  return [...SHOTS_BASE,...SHOTS_UNIVERSAL,...(EXTRA_SHOTS_BY_EQUIPO[key]||[])];
+}
+let SHOTS=[]; // se define al iniciar la captura, según el equipo elegido
+
+// ═══════ STATE ═══════
+let sEquipoKey='',sEquipoLbl='',sEquipoEmoji='';
+let sUnidad='';
+let sPosKey='',sPosLbl='';
+let curShotIdx=0;
+let shotPhotos={}; // key -> {photo, timestamp, label}
+let camStream=null,camTSint=null,pendingPhoto=null,pendingTS=null;
+let orientInt=null;
+
+// ═══════ RENDER SELECTORS ═══════
+function renderEquipoGrid(){
+  document.getElementById('equipoGrid').innerHTML=EQUIPOS.map(e=>
+    `<div class="opt-item" onclick="pickEquipo('${e.key}','${e.label}','${e.emoji}',this)">
+      <div class="opt-icon">${e.emoji}</div><div class="opt-label">${e.label}</div>
+    </div>`).join('');
+}
+function pickEquipo(key,label,emoji,el){
+  document.querySelectorAll('#equipoGrid .opt-item').forEach(i=>i.classList.remove('sel'));
+  el.classList.add('sel');
+  sEquipoKey=key;sEquipoLbl=label;sEquipoEmoji=emoji;
+  checkS0();
+}
+function checkS0(){
+  const name=document.getElementById('inspectorName').value.trim();
+  document.getElementById('s0Next').disabled=!(name&&sEquipoKey);
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  renderEquipoGrid();
+  renderPosGrid();
+  document.getElementById('inspectorName').addEventListener('input',checkS0);
+  document.getElementById('unidadNum').addEventListener('input',()=>{});
+});
+
+function renderPosGrid(){
+  document.getElementById('posGrid').innerHTML=POSICIONES.map(p=>
+    `<div class="pos-item" onclick="pickPos('${p.key}','${p.label}',this)">
+      <div class="pos-icon">${p.emoji}</div><div class="pos-label">${p.label}</div>
+    </div>`).join('');
+}
+function pickPos(key,label,el){
+  document.querySelectorAll('#posGrid .pos-item').forEach(i=>i.classList.remove('sel'));
+  el.classList.add('sel');
+  sPosKey=key;sPosLbl=label;
+  document.getElementById('s2Next').disabled=false;
+}
+
+// ═══════ NAV ═══════
+function showSC(id){document.querySelectorAll('.sc').forEach(c=>c.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function updStep(lbl,pct){document.getElementById('stepLabel').textContent=lbl;document.getElementById('progressBar').style.width=pct+'%'}
+
+function goStep1(){
+  showSC('s1');updStep('Número de Unidad',30);
+  document.getElementById('s1Sub').textContent=`${sEquipoEmoji} ${sEquipoLbl} — identifique la unidad específica`;
+}
+function goStep2(){
+  sUnidad=document.getElementById('unidadNum').value.trim();
+  if(!sUnidad){alert('Ingrese el número de unidad');return}
+  showSC('s2');updStep('Posición de Salida',55);
+}
+function goStep3(){
+  if(!sPosKey){alert('Seleccione la posición de salida');return}
+  SHOTS=getShotsForEquipo(sEquipoKey);
+  curShotIdx=0;shotPhotos={};
+  showSC('sI');updStep('Captura 360°',70);
+  document.getElementById('capSummaryBar').innerHTML=
+    `<span class="summary-badge">${sEquipoEmoji} ${sEquipoLbl}</span>
+     <span class="summary-t">Unidad ${sUnidad}</span>
+     <span class="summary-t" style="margin-left:auto">📍 ${sPosLbl}</span>`;
+  rebuildCaptureUI();
+}
+
+// ═══════ 360 CAPTURE ═══════
+function rebuildCaptureUI(){
+  // busca el primer checkpoint no capturado todavía
+  curShotIdx=SHOTS.findIndex(s=>!shotPhotos[s.key]);
+  if(curShotIdx===-1){goReview();return}
+  renderShotProgress();
+  renderShotLabels();
+  stopCam();
+  document.getElementById('camFullscreen').style.display='none';
+  document.getElementById('prevFullscreen').style.display='none';
+  document.getElementById('startArea').style.display='none';
+  checkOrientation();
+  if(!orientInt)orientInt=setInterval(checkOrientation,400);
+}
+function renderShotProgress(){
+  document.getElementById('shotProgress').innerHTML=SHOTS.map((s,i)=>{
+    let cls='shot-dot';
+    if(shotPhotos[s.key])cls+=' done';else if(i===curShotIdx)cls+=' active';
+    return `<div class="${cls}"></div>`;
+  }).join('');
+}
+function renderShotLabels(){
+  const s=SHOTS[curShotIdx];
+  document.getElementById('shotLabelBig').textContent=`${curShotIdx+1}/${SHOTS.length} — ${s.label}`;
+  document.getElementById('shotLabelSub').textContent=s.sub;
+  document.getElementById('camLbl').textContent=s.label;
+}
+function isLandscape(){
+  return window.matchMedia('(orientation: landscape)').matches && window.innerWidth>window.innerHeight;
+}
+// Controla rotatePrompt / botón "Iniciar Cámara" dentro de la tarjeta normal.
+// La cámara en vivo y la vista previa viven en overlays de pantalla completa,
+// así que nunca comparten espacio con el layout normal de la app.
+function checkOrientation(){
+  const rp=document.getElementById('rotatePrompt');
+  const startArea=document.getElementById('startArea');
+  const camFS=document.getElementById('camFullscreen');
+  const prevFS=document.getElementById('prevFullscreen');
+
+  if(prevFS.style.display==='flex')return; // revisando foto capturada, no interferir
+
+  if(!isLandscape()){
+    rp.style.display='flex';
+    startArea.style.display='none';
+    if(camFS.style.display==='flex'){
+      camFS.style.display='none';
+      stopCam();
+    }
+  }else{
+    rp.style.display='none';
+    if(camFS.style.display!=='flex'){
+      startArea.style.display='block';
+    }
+  }
+}
+async function startCam(){
+  if(!isLandscape()){checkOrientation();return}
+  try{
+    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}},audio:false});
+    document.getElementById('shotVid').srcObject=camStream;
+    document.getElementById('camLbl').textContent=SHOTS[curShotIdx].label;
+    document.getElementById('startArea').style.display='none';
+    document.getElementById('camFullscreen').style.display='flex';
+    camTSint=setInterval(()=>{const e=document.getElementById('camTs');if(e)e.textContent=fmt(new Date())},1000);
+  }catch(e){alert('Error de cámara: '+e.message)}
+}
+function doCapture(){
+  const v=document.getElementById('shotVid');
+  const c=document.createElement('canvas');
+  c.width=v.videoWidth;c.height=v.videoHeight;
+  c.getContext('2d').drawImage(v,0,0);
+  pendingPhoto=c.toDataURL('image/jpeg',.85);
+  pendingTS=new Date().toISOString();
+  document.getElementById('prevImg').src=pendingPhoto;
+  document.getElementById('camFullscreen').style.display='none';
+  document.getElementById('prevFullscreen').style.display='flex';
+  stopCam();
+}
+function retakeShot(){
+  pendingPhoto=null;pendingTS=null;
+  document.getElementById('prevFullscreen').style.display='none';
+  checkOrientation();
+  if(isLandscape())startCam();
+}
+function confirmShot(){
+  const s=SHOTS[curShotIdx];
+  shotPhotos[s.key]={photo:pendingPhoto,timestamp:pendingTS,label:s.label};
+  pendingPhoto=null;pendingTS=null;
+  document.getElementById('prevFullscreen').style.display='none';
+  rebuildCaptureUI();
+}
+function stopCam(){
+  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null}
+  if(camTSint){clearInterval(camTSint);camTSint=null}
+}
+
+// ═══════ REVIEW ═══════
+function goReview(){
+  if(orientInt){clearInterval(orientInt);orientInt=null}
+  stopCam();
+  document.getElementById('camFullscreen').style.display='none';
+  document.getElementById('prevFullscreen').style.display='none';
+  showSC('sR');updStep('Revisión Final',88);
+  document.getElementById('reviewGrid').innerHTML=SHOTS.map(s=>{
+    const p=shotPhotos[s.key];
+    return `<div class="review-item">
+      <img src="${p.photo}">
+      <div class="review-lbl">${s.label}</div>
+      <button class="review-retake" onclick="retakeFromReview('${s.key}')">🔄</button>
+    </div>`;
+  }).join('');
+}
+function retakeFromReview(key){
+  delete shotPhotos[key];
+  showSC('sI');updStep('Captura 360°',70);
+  rebuildCaptureUI();
+}
+
+// ═══════ SUBMIT ═══════
+// Estructura de carpetas esperada en Drive (a implementar en el Apps Script):
+// Fecha (YYYY-MM-DD) → Tipo de Equipo → # Unidad → fotografías
+function submitEvidence(){
+  const btn=document.getElementById('submitBtn');
+  btn.disabled=true;btn.textContent='☁️ Enviando…';
+  const inspector=document.getElementById('inspectorName').value.trim();
+  const now=new Date();
+  const fecha=now.toISOString().slice(0,10); // YYYY-MM-DD, carpeta raíz por fecha
+  const payload={
+    action:'saveEquipmentEvidence',
+    inspector,
+    equipoKey:sEquipoKey,
+    equipoLabel:sEquipoLbl,
+    unidad:sUnidad,
+    posicionKey:sPosKey,
+    posicionLabel:sPosLbl,
+    timestamp:now.toISOString(),
+    // Jerarquía de carpetas: fecha / tipo de equipo / # unidad
+    fecha:fecha,
+    folderStructure:{
+      nivel1_fecha:fecha,
+      nivel2_tipoEquipo:sEquipoLbl,
+      nivel3_unidad:sUnidad
+    },
+    fotos:SHOTS.map(s=>({
+      key:s.key,label:s.label,
+      timestamp:shotPhotos[s.key].timestamp,
+      photoBase64:shotPhotos[s.key].photo
+    }))
+  };
+  showSC('sC');updStep('Completado',100);
+  document.getElementById('cInspector').textContent=inspector;
+  document.getElementById('cEquipo').textContent=`${sEquipoEmoji} ${sEquipoLbl}`;
+  document.getElementById('cUnidad').textContent=sUnidad;
+  document.getElementById('cPosicion').textContent=sPosLbl;
+  document.getElementById('cFecha').textContent=fmt(now)+' — '+now.toLocaleDateString('es-ES');
+  document.getElementById('aiLoading').style.display='block';
+  document.getElementById('aiResults').style.display='none';
+  document.getElementById('driveLink').style.display='none';
+
+  fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
+    .then(r=>r.json())
+    .then(r=>{
+      document.getElementById('aiLoading').style.display='none';
+      if(r&&r.success){
+        renderAiResults(r.analysis||[]);
+        if(r.folderUrl){
+          const dl=document.getElementById('driveLink');
+          dl.href=r.folderUrl;dl.style.display='block';
+        }
+      }else{
+        document.getElementById('aiResults').style.display='block';
+        document.getElementById('aiResults').innerHTML=`<div class="ai-result warn"><div class="ai-result-desc">⚠️ No se pudo completar el análisis: ${(r&&r.message)||'error desconocido'}. La evidencia puede no haberse guardado — verifique la conexión con Apps Script.</div></div>`;
+      }
+    })
+    .catch(e=>{
+      document.getElementById('aiLoading').style.display='none';
+      document.getElementById('aiResults').style.display='block';
+      document.getElementById('aiResults').innerHTML=`<div class="ai-result warn"><div class="ai-result-desc">⚠️ Error de red al enviar la evidencia: ${e.message}</div></div>`;
+    });
+}
+function renderAiResults(analysis){
+  const box=document.getElementById('aiResults');
+  box.style.display='block';
+  if(!analysis.length){box.innerHTML='<div class="ai-result ok"><div class="ai-result-desc">Sin resultados de análisis disponibles.</div></div>';return}
+  box.innerHTML=analysis.map(a=>{
+    const hasDamage=a.tieneDanos;
+    return `<div class="ai-result ${hasDamage?'warn':'ok'}">
+      <div class="ai-result-hdr">
+        <span class="ai-result-lbl">${a.label||a.key}</span>
+        <span class="ai-result-tag ${hasDamage?'warn':'ok'}">${hasDamage?'⚠️ Revisar':'✅ Sin daños'}</span>
+      </div>
+      <div class="ai-result-desc">${a.descripcion||'—'}</div>
+    </div>`;
+  }).join('');
+}
+
+function newRegistro(){
+  sEquipoKey='';sEquipoLbl='';sEquipoEmoji='';sUnidad='';sPosKey='';sPosLbl='';
+  shotPhotos={};curShotIdx=0;SHOTS=[];
+  document.getElementById('inspectorName').value='';
+  document.getElementById('unidadNum').value='';
+  document.querySelectorAll('.opt-item,.pos-item').forEach(i=>i.classList.remove('sel'));
+  document.getElementById('s0Next').disabled=true;
+  document.getElementById('s2Next').disabled=true;
+  showSC('s0');updStep('Seleccione el equipo',10);
+}
+
+function fmt(d){return d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
+window.addEventListener('resize',()=>{if(document.getElementById('sI').classList.contains('active'))checkOrientation()});
+</script>
+</body>
+</html>
