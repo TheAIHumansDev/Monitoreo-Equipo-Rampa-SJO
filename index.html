@@ -186,13 +186,8 @@ input[type="text"]:focus,input[type="password"]:focus{border-color:#3b82f6}
 
 <div class="app-content" id="appContent">
 
-  <!-- s0: inspector + equipo -->
+  <!-- s0: equipo (el inspector ya se identifica vía login) -->
   <div id="s0" class="sc active">
-    <div class="card-glass">
-      <h2 class="card-title">Inspector</h2>
-      <p class="card-sub">Nombre de quien registra la evidencia</p>
-      <input type="text" id="inspectorName" placeholder="Nombre completo">
-    </div>
     <div class="card-glass">
       <h2 class="card-title">Tipo de Equipo</h2>
       <p class="card-sub">Seleccione el equipo GSE a inspeccionar</p>
@@ -363,13 +358,12 @@ function showLoginMsg(text,type){
   m.style.display=text?'block':'none';
 }
 function enterApp(userData){
+  currentInspector=userData.username;
   document.getElementById('loginGate').style.display='none';
   document.getElementById('appShell').style.display='flex';
   const lbl=document.getElementById('headerUserLbl');
   if(lbl)lbl.textContent=`👤 ${userData.username}${userData.role?' · '+userData.role:''}`;
-  // Prellena el nombre del inspector con el usuario autenticado (editable)
-  const insp=document.getElementById('inspectorName');
-  if(insp&&!insp.value){insp.value=userData.username;checkS0()}
+  checkS0();
 }
 function checkExistingSession(){
   try{
@@ -449,6 +443,7 @@ function getShotsForEquipo(key){
 let SHOTS=[]; // se define al iniciar la captura, según el equipo elegido
 
 // ═══════ STATE ═══════
+let currentInspector=''; // viene del login, ya no se captura por formulario
 let sEquipoKey='',sEquipoLbl='',sEquipoEmoji='';
 let sUnidad='';
 let sPosKey='',sPosLbl='';
@@ -471,13 +466,11 @@ function pickEquipo(key,label,emoji,el){
   checkS0();
 }
 function checkS0(){
-  const name=document.getElementById('inspectorName').value.trim();
-  document.getElementById('s0Next').disabled=!(name&&sEquipoKey);
+  document.getElementById('s0Next').disabled=!sEquipoKey;
 }
 document.addEventListener('DOMContentLoaded',()=>{
   renderEquipoGrid();
   renderPosGrid();
-  document.getElementById('inspectorName').addEventListener('input',checkS0);
   document.getElementById('unidadNum').addEventListener('input',()=>{});
   checkExistingSession(); // si ya hay sesión activa, salta el login
 });
@@ -644,7 +637,7 @@ function retakeFromReview(key){
 function submitEvidence(){
   const btn=document.getElementById('submitBtn');
   btn.disabled=true;btn.textContent='☁️ Enviando…';
-  const inspector=document.getElementById('inspectorName').value.trim();
+  const inspector=currentInspector;
   const now=new Date();
   const fecha=now.toISOString().slice(0,10); // YYYY-MM-DD, carpeta raíz por fecha
   const payload={
@@ -719,7 +712,6 @@ function renderAiResults(analysis){
 function newRegistro(){
   sEquipoKey='';sEquipoLbl='';sEquipoEmoji='';sUnidad='';sPosKey='';sPosLbl='';
   shotPhotos={};curShotIdx=0;SHOTS=[];
-  document.getElementById('inspectorName').value='';
   document.getElementById('unidadNum').value='';
   document.querySelectorAll('.opt-item,.pos-item').forEach(i=>i.classList.remove('sel'));
   document.getElementById('s0Next').disabled=true;
