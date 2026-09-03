@@ -8,7 +8,22 @@
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{overflow-x:hidden}
 body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#060b1e;color:#e2e8f0;overflow-x:hidden;min-height:100vh}
-.app-shell{position:relative;z-index:2;display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+#appShell{display:none}
+.app-shell{position:relative;z-index:2;flex-direction:column;height:100dvh;overflow:hidden}
+
+/* LOGIN GATE */
+.login-gate{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;background:#060b1e}
+.login-card{max-width:400px;width:100%}
+.login-logo{text-align:center;margin-bottom:22px}
+.login-logo-icon{font-size:44px;display:block;margin-bottom:8px}
+.login-title{font-size:24px;font-weight:800;background:linear-gradient(135deg,#3b82f6,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+.login-sub{color:#475569;font-size:11px;font-family:'Courier New',monospace;letter-spacing:1px;text-transform:uppercase}
+.login-msg{margin-top:14px;padding:10px 14px;border-radius:10px;font-size:12px;text-align:center;display:none}
+.login-msg.error{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#fca5a5;display:block}
+.login-msg.success{background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);color:#6ee7b7;display:block}
+.login-spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin-right:7px;vertical-align:middle}
+.logout-btn{background:none;border:1px solid rgba(59,130,246,.32);color:#94a3b8;border-radius:8px;padding:5px 9px;font-size:12px;cursor:pointer;flex-shrink:0}
+.logout-btn:hover{border-color:rgba(59,130,246,.6);color:#e2e8f0}
 
 /* HEADER */
 .app-header{background:rgba(4,7,18,0.96);backdrop-filter:blur(24px);border-bottom:1px solid rgba(59,130,246,0.16);padding:12px 16px 0;flex-shrink:0}
@@ -27,8 +42,8 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#060b1e;
 .card-glass{background:rgba(10,17,35,0.88);backdrop-filter:blur(20px);border:1px solid rgba(59,130,246,0.2);border-radius:18px;padding:22px;margin-bottom:12px}
 .card-title{color:#fff;font-size:19px;font-weight:700;text-align:center;margin-bottom:5px}
 .card-sub{color:#475569;font-size:13px;text-align:center;margin-bottom:16px}
-input[type="text"]{width:100%;padding:13px 15px;background:rgba(18,28,52,0.8);border:1px solid rgba(59,130,246,0.18);border-radius:11px;color:#fff;font-size:15px;outline:none;transition:border-color .2s;font-family:inherit}
-input[type="text"]:focus{border-color:#3b82f6}
+input[type="text"],input[type="password"]{width:100%;padding:13px 15px;background:rgba(18,28,52,0.8);border:1px solid rgba(59,130,246,0.18);border-radius:11px;color:#fff;font-size:15px;outline:none;transition:border-color .2s;font-family:inherit}
+input[type="text"]:focus,input[type="password"]:focus{border-color:#3b82f6}
 .form-lbl{color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block}
 .form-g{margin-bottom:14px}
 .nav-btns{display:flex;gap:9px;margin-top:15px}
@@ -131,12 +146,39 @@ input[type="text"]:focus{border-color:#3b82f6}
 </style>
 </head>
 <body>
-<div class="app-shell">
+
+<!-- ═══ LOGIN GATE — se muestra hasta autenticarse contra el backend de Turnaround Check ═══ -->
+<div id="loginGate" class="login-gate">
+  <div class="card-glass login-card">
+    <div class="login-logo">
+      <span class="login-logo-icon">✈️</span>
+      <h1 class="login-title">Equipo 360°</h1>
+      <p class="login-sub">Evidencia Fotográfica · Acceso</p>
+    </div>
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="form-g">
+        <label class="form-lbl">Usuario</label>
+        <input type="text" id="loginUser" placeholder="Ingrese su usuario" required autocomplete="username">
+      </div>
+      <div class="form-g">
+        <label class="form-lbl">Contraseña</label>
+        <input type="password" id="loginPass" placeholder="••••••••" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn-next" id="loginBtn" style="width:100%">
+        <span id="loginBtnText">Iniciar Sesión</span>
+      </button>
+      <div class="login-msg" id="loginMsg"></div>
+    </form>
+  </div>
+</div>
+
+<div class="app-shell" id="appShell">
 
 <header class="app-header">
   <div class="header-row">
     <span class="header-title">📸 Equipo 360°</span>
-    <span class="header-sub">Evidencia de Salida</span>
+    <span class="header-sub" id="headerUserLbl">Evidencia de Salida</span>
+    <button class="logout-btn" onclick="logout()" title="Cerrar sesión">⏻ Salir</button>
   </div>
   <div class="progress-bar"><div class="progress-fill" id="progressBar"></div></div>
   <div class="step-label" id="stepLabel">Seleccione el equipo</div>
@@ -266,6 +308,90 @@ input[type="text"]:focus{border-color:#3b82f6}
 </div>
 
 <script>
+// ═══════ LOGIN (contra el mismo backend de Flights Report / Turnaround Check) ═══════
+const AUTH_SCRIPT_URL='https://script.google.com/macros/s/AKfycbwratJLa8uJ_EYMIOPbzkh4YlrahSPUdEonIeFHtsA5fAzlxMyRFyuOeHd6sxughzXL/exec';
+const SESSION_KEY='equipo360_user';
+
+function handleLogin(e){
+  e.preventDefault();
+  const username=document.getElementById('loginUser').value.trim();
+  const password=document.getElementById('loginPass').value;
+  if(!username||!password){showLoginMsg('Complete todos los campos','error');return}
+
+  setLoginLoading(true);
+  showLoginMsg('','');
+
+  const cb='lCb'+Date.now();
+  const url=`${AUTH_SCRIPT_URL}?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&callback=${cb}`;
+
+  window[cb]=function(res){
+    setLoginLoading(false);
+    delete window[cb];
+    const s=document.getElementById('jsonp-login');
+    if(s)s.remove();
+
+    if(res&&res.success){
+      showLoginMsg('✓ '+res.message,'success');
+      const userData={username:res.username,role:res.role,loginTime:new Date().toISOString()};
+      sessionStorage.setItem(SESSION_KEY,JSON.stringify(userData));
+      setTimeout(()=>enterApp(userData),400);
+    }else{
+      showLoginMsg('✗ '+(res?res.message:'Error desconocido'),'error');
+    }
+  };
+
+  const scr=document.createElement('script');
+  scr.id='jsonp-login';
+  scr.src=url;
+  scr.onerror=()=>{setLoginLoading(false);showLoginMsg('✗ Error de conexión','error');delete window[cb]};
+  document.body.appendChild(scr);
+
+  setTimeout(()=>{
+    if(window[cb]){delete window[cb];setLoginLoading(false);showLoginMsg('✗ Tiempo de espera agotado','error')}
+  },15000);
+}
+function setLoginLoading(on){
+  const btn=document.getElementById('loginBtn');
+  const txt=document.getElementById('loginBtnText');
+  btn.disabled=on;
+  txt.innerHTML=on?'<span class="login-spin"></span>Autenticando...':'Iniciar Sesión';
+}
+function showLoginMsg(text,type){
+  const m=document.getElementById('loginMsg');
+  m.textContent=text;
+  m.className='login-msg '+type;
+  m.style.display=text?'block':'none';
+}
+function enterApp(userData){
+  document.getElementById('loginGate').style.display='none';
+  document.getElementById('appShell').style.display='flex';
+  const lbl=document.getElementById('headerUserLbl');
+  if(lbl)lbl.textContent=`👤 ${userData.username}${userData.role?' · '+userData.role:''}`;
+  // Prellena el nombre del inspector con el usuario autenticado (editable)
+  const insp=document.getElementById('inspectorName');
+  if(insp&&!insp.value){insp.value=userData.username;checkS0()}
+}
+function checkExistingSession(){
+  try{
+    const raw=sessionStorage.getItem(SESSION_KEY);
+    if(raw){
+      const userData=JSON.parse(raw);
+      if(userData&&userData.username){enterApp(userData);return true}
+    }
+  }catch(e){}
+  return false;
+}
+function logout(){
+  sessionStorage.removeItem(SESSION_KEY);
+  stopCam();
+  if(orientInt){clearInterval(orientInt);orientInt=null}
+  document.getElementById('appShell').style.display='none';
+  document.getElementById('loginGate').style.display='flex';
+  document.getElementById('loginUser').value='';
+  document.getElementById('loginPass').value='';
+  document.getElementById('loginForm').reset();
+}
+
 // ═══════ CONFIG ═══════
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyfeLOpPNmV53wqF4cnk9Ff7T0deCl22FLoSV71d7pJjOkSG_5Q39sWBIzPLjXoa65r3A/exec';
 
@@ -353,6 +479,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   renderPosGrid();
   document.getElementById('inspectorName').addEventListener('input',checkS0);
   document.getElementById('unidadNum').addEventListener('input',()=>{});
+  checkExistingSession(); // si ya hay sesión activa, salta el login
 });
 
 function renderPosGrid(){
